@@ -46,4 +46,55 @@ if '-' not in sys.argv[1]:
         print(f"{total["lines"]}\t{total["words"]}\t{total["bytes"]}\ttotal")
 else:
     options = sys.argv[1].lstrip('-')
-    print(options)
+    files = sys.argv[2:]
+    for o in options:
+        if o not in 'clmw':
+            print(f"ccwc: Wrong usage option -- {o}")
+            print("usage: ccwc [-clmw] [file ...]")
+            sys.exit(1)
+    values = {
+        'l': [],
+        'w': [],
+        'm': []
+    }
+    for i,file in enumerate(files):
+        # with open(file, 'r', encoding='utf-8') as f:
+        #     lines = f.readlines()
+        #     words = [word for line in lines for word in line.split()]
+        # read file just once since file reads are expensive
+        with open(file, 'rb') as f:
+            data_bytes = f.read()
+        if 'l' in options or 'w' in options:
+            text = data_bytes.decode('utf-8')
+            lines = text.splitlines(keepends=True)
+            values['l'].append(len(lines))
+            if 'w' in options:
+                # words = [word for line in lines for word in line.split()] # this is a list comprehension, not memory-efficient
+                # using a generator expression, calculate the length of each line in words and keep it adding to sum on the fly
+                values['w'].append(sum(len(line.split()) for line in lines))
+        if 'm' in options or 'c' in options:
+            values['m'].append(len(data_bytes))
+
+        # print output for one file
+        output_parts = []
+        if values['l']:
+            output_parts.append(str(values['l'][i]))
+        if values['w']:
+            output_parts.append(str(values['w'][i]))
+        if values['m']:
+            output_parts.append(str(values['m'][i]))
+        print('\t'.join(output_parts) + f'\t{file}')
+    # print total figures if there's more than 1 file
+    if len(files)>1:
+        output_parts = []
+        if values['l']:
+            output_parts.append(str(sum(values['l'])))
+        if values['w']:
+            output_parts.append(str(sum(values['w'])))
+        if values['m']:
+            output_parts.append(str(sum(values['m'])))
+        print('\t'.join(output_parts) + f'\ttotal')
+        
+    
+    
+            
